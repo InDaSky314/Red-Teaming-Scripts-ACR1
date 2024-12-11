@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Check if nmap is installed
+if ! command -v nmap &> /dev/null
+then
+    echo "nmap could not be found. Please install it first."
+    exit 1
+fi
+
+# Prompt for input file containing IP addresses
+read -p "Enter the file name containing IP addresses (e.g., ip_list.txt): " IP_FILE
+if [[ ! -f $IP_FILE ]]; then
+    echo "File not found: $IP_FILE"
+    exit 1
+fi
+
+# Prompt for output file
+read -p "Enter the output file name (e.g., open_ports_list.txt): " OUTPUT_FILE
+
+# Start scanning
+echo "Scanning the specified IP addresses for open ports..."
+nmap -p- -T4 -iL $IP_FILE -oG - | awk '/Up$/{ip=$2}/Ports:/{print ip " " $0}' > $OUTPUT_FILE
+
+# Process the output to create a cleaner report
+echo "Generating a list of devices with their open ports..."
+awk '/Ports:/{
+    gsub(/\(.*\)/, "");
+    gsub(/\[.*\]/, "");
+    print "Device: " $1 "\nOpen Ports: " substr($0, index($0, "Ports:")) "\n"
+}' $OUTPUT_FILE > temp_file && mv temp_file $OUTPUT_FILE
+
+# Display summary
+echo "Scan complete. Results saved to $OUTPUT_FILE."
