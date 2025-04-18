@@ -1,1 +1,1 @@
-# CP17-Bash-Script-for-Port-Scanning
+Port Scanning using NMAP
